@@ -11,6 +11,8 @@ const catalogRouter = require("./routes/catalog"); // Import routes for "catalog
 const compression = require("compression");
 const helmet = require("helmet");
 
+require("dotenv").config();
+
 const app = express();
 
 // Set up rate limiter: maximum of twenty requests per minute
@@ -26,13 +28,16 @@ app.use(limiter);
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 
-const dev_db_url =
-  // "mongodb+srv://cooluser:coolpassword@cluster0.cojoign.mongodb.net/local_library?retryWrites=true&w=majority&appName=Cluster0";
-  "mongodb+srv://fkkdrive1:kkisfg5221@cluster0.ndurdni.mongodb.net/local_library?retryWrites=true&w=majority&appName=Cluster0";
+// const dev_db_url =
+// "mongodb+srv://cooluser:coolpassword@cluster0.cojoign.mongodb.net/local_library?retryWrites=true&w=majority&appName=Cluster0";
+// "mongodb+srv://fkkdrive1:kkisfg5221@cluster0.ndurdni.mongodb.net/local_library?retryWrites=true&w=majority&appName=Cluster0";
 // const mongoDB = process.env.MONGODB_URI || dev_db_url;
-const mongoDB = dev_db_url;
+const mongoDB = process.env.MONGODB_URI;
+// const mongoDB = dev_db_url;
 
-main().catch((err) => console.log(err));
+main()
+  .then(() => console.log("fkkdrive: Database connected....."))
+  .catch((err) => console.log(err.message));
 async function main() {
   await mongoose.connect(mongoDB);
 }
@@ -49,10 +54,20 @@ app.use(cookieParser());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
-      "script-src": ["'self'", "code.jquery.com", "cdn.jsdelivr.net"],
+      "script-src": [
+        "img-src 'self' data:",
+        "code.jquery.com",
+        "cdn.jsdelivr.net",
+      ],
     },
   })
 );
+
+// Set the Content Security Policy header to allow blob URLs for images
+app.use((req, res, next) => {
+  res.setHeader("Content-Security-Policy", "img-src 'self' data: blob:");
+  next();
+});
 
 app.use(compression()); // Compress all routes
 
